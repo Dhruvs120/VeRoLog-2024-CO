@@ -10,9 +10,10 @@ from COread2024 import *
 import gurobipy as gp
 from gurobipy import Model, GRB, quicksum
 from collections import defaultdict
+import math
 
 def calculates_distance(coordinates1, coordinates2):
-    distance = round(np.sqrt(pow(coordinates2[0] -  coordinates1[0],2) + pow(coordinates2[1] -  coordinates1[1],2)),2)
+    distance = round(math.sqrt(pow(coordinates2[0] -  coordinates1[0],2) + pow(coordinates2[1] -  coordinates1[1],2)),2)
     return distance
 
 global d_schedule
