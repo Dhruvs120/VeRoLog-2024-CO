@@ -96,7 +96,7 @@ def read_coordinates_list(file):
         x_coord = int(coordinates[1])
         y_coord = int(coordinates[2])
 
-        coordinates_list[cust_id-1] = [x_coord, y_coord]
+        coordinates_list[cust_id] = [x_coord, y_coord]
     
 def read_requests(file):
     global requests_size
@@ -140,9 +140,8 @@ def read_technicians(file):
         technicians[i] = {'location_id': location_id,'tech_max_distance': tech_max_distance,
             'tech_max_install': tech_max_install,'machine_capabilities': machine_capabilities}
         
-read_input("/Users/stijnsmoes/Desktop/UNI ass453/CO 2024/instances 2024/CO_Case2406.txt")
-
-
+        
+read_input("C:/Users/gkngo/Desktop/VeRoLog-2024-CO/instances 2024/CO_Case2402.txt")
 
 
 
