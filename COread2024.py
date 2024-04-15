@@ -113,7 +113,7 @@ def read_requests(file):
         machine_id = int(request[4])
         nr_machines = int(request[5])
     
-        requests[i] = {'location_id':location_id, "first_day":first_day, 'last_day':last_day, 
+        requests[i+1] = {'location_id':location_id, "first_day":first_day, 'last_day':last_day, 
                                 'machine_id':machine_id, 'nr_machines':nr_machines}       
 
 
