@@ -77,8 +77,8 @@ def read_tool_details(file):
     global machines_set
     global machines_size
     
-    i = 0
-    while i < machines:
+    i = 1
+    while i <= machines:
         line = file.readline()
         entries = line.split()
         machines_set[i] = {'machine_id':int(entries[0]), "size":int(entries[1]), 'idle_fee':int(entries[2])}       
