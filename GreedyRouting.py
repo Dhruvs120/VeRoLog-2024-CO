@@ -109,5 +109,10 @@ for i in range (1, days + 1):
                     if k == len(d_schedule[i]) - 1 and help_list:
                         routes_list.append(help_list)
             else: d_schedule[i] = routes_list
-                        
+                
+#makes sure the values of the dictionary d_schedule are all lists of lists          
+for key, value in d_schedule.items():
+    if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
+        d_schedule[key] = [[]]
+        
 print(d_schedule)
