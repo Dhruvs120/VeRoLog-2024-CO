@@ -124,14 +124,12 @@ for key, value in d_schedule.items():
     if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
         d_schedule[key] = [[]]
         
-def calculates_routing_costs():
-
-    total_distance = sum(is_in_maxim_km(j) for sublist in d_schedule.values() for j in sublist if j)              
-    maximumum_number_of_trucks = max(len(routes) for routes in d_schedule.values())
-    number_of_routes = sum(1 for days in d_schedule.values() for route in days if route)
-    routing_costs = ((maximumum_number_of_trucks * truck_cost) + (total_distance * truck_distance_cost) 
-        + (number_of_routes * truck_day_cost)) 
-    return routing_costs
+def calculates_routing_costs():    
+    total_distance = sum(is_in_maxim_km(j) for sublist in d_schedule.values() for j in sublist if j)            
+    maxim_trucks = max(len(sublist) for sublist in d_schedule.values())          
+    total_trucks = sum(len(sublist) for sublist in d_schedule.values())          
+    total_routing_costs = truck_distance_cost * total_distance + maxim_trucks * truck_cost + total_trucks * truck_day_cost 
+    return total_routing_costs
         
 print(d_schedule)
 #Short explanation of the final d_schedule:
