@@ -47,9 +47,7 @@ def is_in_maxim_km (req_list):
         distance = distance + calculates_distance(previous_customer_location, actual_customer_location)
         if i == len(req_list) - 1:           
             distance = distance + calculates_distance(actual_customer_location, depot_location)           
-    if distance <= truck_max_distance:
-        global total_distance 
-        total_distance += distance
+    if distance <= truck_max_distance: 
         return True
     else: return False
 
@@ -125,11 +123,15 @@ for i in range (1, days + 1):
 for key, value in d_schedule.items():
     if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
         d_schedule[key] = [[]]
+        
+def calculates_routing_costs():
 
-maximumum_number_of_trucks = max(len(routes) for routes in d_schedule.values())
-number_of_routes = sum(1 for days in d_schedule.values() for route in days if route)
-routing_costs = ((maximumum_number_of_trucks * truck_cost) + (total_distance * truck_distance_cost) 
-    + (number_of_routes * truck_day_cost)) 
+    total_distance = sum(is_in_maxim_km(j) for sublist in d_schedule.values() for j in sublist if j)              
+    maximumum_number_of_trucks = max(len(routes) for routes in d_schedule.values())
+    number_of_routes = sum(1 for days in d_schedule.values() for route in days if route)
+    routing_costs = ((maximumum_number_of_trucks * truck_cost) + (total_distance * truck_distance_cost) 
+        + (number_of_routes * truck_day_cost)) 
+    return routing_costs
         
 print(d_schedule)
 #Short explanation of the final d_schedule:
