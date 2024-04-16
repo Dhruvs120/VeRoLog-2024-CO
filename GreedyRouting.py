@@ -14,6 +14,8 @@ import numpy as np
 global d_schedule
 global max_km_schedule
 
+total_distance = 0
+routing_costs = 0
 d_schedule = {}
 max_km_schedule = {}
 
@@ -46,6 +48,8 @@ def is_in_maxim_km (req_list):
         if i == len(req_list) - 1:           
             distance = distance + calculates_distance(actual_customer_location, depot_location)           
     if distance <= truck_max_distance:
+        global total_distance 
+        total_distance += distance
         return True
     else: return False
 
@@ -121,6 +125,11 @@ for i in range (1, days + 1):
 for key, value in d_schedule.items():
     if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
         d_schedule[key] = [[]]
+
+maximumum_number_of_trucks = max(len(routes) for routes in d_schedule.values())
+number_of_routes = sum(1 for days in d_schedule.values() for route in days if route)
+routing_costs = ((maximumum_number_of_trucks * truck_cost) + (total_distance * truck_distance_cost) 
+    + (number_of_routes * truck_day_cost)) 
         
 print(d_schedule)
 #Short explanation of the final d_schedule:
