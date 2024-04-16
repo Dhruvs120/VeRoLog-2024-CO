@@ -101,14 +101,20 @@ for i in range (1, days + 1):
         help_list = []
         if d_schedule[i][j] not in check_req:
             help_list.append(d_schedule[i][j])
+            check_req.append(d_schedule[i][j])
             if j != len(d_schedule[i]) - 1:
-                for k in range(j + 1, len(d_schedule[i])):
-                    help_list.append(d_schedule[i][k])
-                    if not is_in_maxim_km(help_list) or not is_in_maxim_cap(help_list):
-                        help_list.remove(d_schedule[i][k])
+                for k in range(j + 1, len(d_schedule[i])):                  
+                    if d_schedule[i][k] not in check_req:
+                        help_list.append(d_schedule[i][k])
+                        if is_in_maxim_km(help_list) and is_in_maxim_cap(help_list):
+                            check_req.append(d_schedule[i][k])
+                        else: help_list.remove(d_schedule[i][k])
+                        
                     if k == len(d_schedule[i]) - 1 and help_list:
-                        routes_list.append(help_list)
-            else: d_schedule[i] = routes_list
+                        routes_list.append(help_list)                           
+            else: 
+                routes_list.append(help_list)
+    d_schedule[i] = routes_list
                 
 #makes sure the values of the dictionary d_schedule are all lists of lists          
 for key, value in d_schedule.items():
