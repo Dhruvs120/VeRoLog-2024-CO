@@ -116,3 +116,8 @@ for key, value in d_schedule.items():
         d_schedule[key] = [[]]
         
 print(d_schedule)
+#Short explanation of the final d_schedule:
+#every day has a a list of lists as value. The lists in the global list are all the routes that have 
+#to be made in that day by different trucks. For example:
+#{1: [[2]], 2: [[6, 10], [7]], 3: [[1, 3], [3], [4, 5], [5]], 4: [[]], 5: [[]]} here we see that for day two we need two trucks: 
+#one for the requests 6,10 and another one for the request 7. We do not need any trucks for the fourth and fifth day
