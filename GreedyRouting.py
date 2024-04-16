@@ -8,6 +8,7 @@ Created on Mon Apr 15 16:22:01 2024
 
 from COread2024 import *
 from collections import defaultdict
+import numpy as np
 
 
 global d_schedule
