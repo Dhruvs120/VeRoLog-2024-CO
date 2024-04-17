@@ -12,9 +12,11 @@ from collections import defaultdict
 
 global d_schedule
 global route_schedule
+global truck_days
 
 d_schedule = {}
 route_schedule = {}
+truck_days = 0
 
 for day in range(1, days + 1):
     d_schedule[day] = []
@@ -31,6 +33,7 @@ for day in range(1, days+1):
     for i in range(1, requests_size + 1):
         if requests[i]["first_day"] == day:    
             d_schedule[day].append(i)
+
 
 #Get the distance that must be done by a truck in order to deliver a list of request
 #assuming the truck starts at the depot and visits all the requests in the order they are in the list
@@ -145,15 +148,29 @@ assign_as_late()
 creates_route_schedule()
 formats_route_schedule()
 
+total_distance = 0
+maxim_trucks = 0
+total_trucks = 0
+total_routing_costs = 0
+
 def calculates_routing_costs():
+    global total_distance
+    global maxim_trucks
+    global total_trucks
+    global total_routing_costs
+
     total_distance = sum(get_distance(j) for sublist in route_schedule.values() for j in sublist if j)          
     maxim_trucks = max(len(sublist) for sublist in route_schedule.values())   
-    total_trucks = sum(1 for sublist in route_schedule.values() for item in sublist if item)             
+    total_trucks =  max(len(sublist) for sublist in route_schedule.values())             
     total_routing_costs = truck_distance_cost * total_distance + maxim_trucks * truck_cost + total_trucks * truck_day_cost
     return total_routing_costs
 
+calculates_routing_costs()
 
-
+# Calculate truck days 
+for day in range(1, days+1):
+    if len(d_schedule[day]) != 0:
+        truck_days += 1
         
         
 

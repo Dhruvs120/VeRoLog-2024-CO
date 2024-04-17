@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr 17 09:50:19 2024
+
+@author: stelianmunteanu
+"""
+
+
+from GreedyRouting import *
+from COread2024 import *
+from GreedyScheduling import *
+
+#checks if all the requests have been fullfilled
+requests_list = list(requests.keys())
+def checks_all_requests():
+    return all(elem in check_list for elem in requests_list) 
+
+#gets a list of requests that have not been fullfilled yet
+def get_unfull_req():
+    unfull_req = [elem for elem in requests_list if elem not in check_list]
+    return unfull_req
+
+#returns the cheapest day, a request can be re-assigned to
+def get_cheapest_day(req_id):
+    min_costs = float('inf')
+    day = None
+    for i in range(requests[req_id]["first_day"], requests[req_id]["last_day"]):
+        d_schedule[i].append(req_id)
+        creates_route_schedule()
+        costs = calculates_routing_costs()
+        if costs < min_costs:
+            day = i
+            min_costs = costs
+            d_schedule[i].remove(req_id)
+    return day
+                       
+#re-assigns the missing requests if they are present
+def finish():    
+    unfull_req = get_unfull_req()
+    while not checks_all_requests():
+        for i in unfull_req:
+            cheapest_day = get_cheapest_day(i)
+            d_schedule[cheapest_day].append(i)
+            creates_route_schedule()
+            formats_route_schedule()
+            
+            creates_install_schedule()
+            formats_install_schedule()
+            init_final_schedule()            
+            creates_combinations()
+            creates_schedule()
+            
+            
+finish()     
+
+calculates_routing_costs()
+calculates_installation_costs()
+
+print(route_schedule)
+print(calculates_routing_costs() + calculates_installation_costs())
+    
