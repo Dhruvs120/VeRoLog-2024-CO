@@ -1,3 +1,5 @@
+import gurobipy as gp
+import numpy as np
 dataset = ""
 name = ""
 
@@ -22,6 +24,7 @@ requests = {}
 technicians = {}
 machines_set = {}
 machines_size = {}
+
 
 def read_input(filename):
     file = open(filename, 'r')
@@ -83,7 +86,7 @@ def read_tool_details(file):
         entries = line.split()
         machines_set[i] = {'machine_id':int(entries[0]), "size":int(entries[1]), 'idle_fee':int(entries[2])}       
         machines_size[i] = int(entries[1])
-        i+=1
+        i += 1
         
 def read_coordinates_list(file):
     global coordinates_size
@@ -113,7 +116,7 @@ def read_requests(file):
         machine_id = int(request[4])
         nr_machines = int(request[5])
     
-        requests[i+1] = {'location_id':location_id, "first_day":first_day, 'last_day':last_day, 
+        requests[request_id] = {'location_id':location_id, "first_day":first_day, 'last_day':last_day, 
                                 'machine_id':machine_id, 'nr_machines':nr_machines}       
 
 
@@ -137,11 +140,28 @@ def read_technicians(file):
         else:
             machine_capabilities = []
         
-        technicians[i] = {'location_id': location_id,'tech_max_distance': tech_max_distance,
+        technicians[technician_id] = {'location_id': location_id,'tech_max_distance': tech_max_distance,
             'tech_max_install': tech_max_install,'machine_capabilities': machine_capabilities}
-        
-        
-read_input("C:/Users/gkngo/Desktop/VeRoLog-2024-CO/instances 2024/CO_Case2402.txt")
+ 
+instance_file = "/Users/stelianmunteanu/Desktop/univer/Combinatorial Optimization/Case/instances 2024/CO_Case2403.txt"        
+read_input(instance_file)
+
+
+
+
+
+
+
+
+    
+
+
+    
+
+
+
+
+
 
 
 
