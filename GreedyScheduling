@@ -11,6 +11,12 @@ from COread2024 import *
 from collections import defaultdict
 from itertools import combinations
 
+#global variables for writing the output
+total_technician_distance = 0
+sum_of_technician_days = 0
+total_technicians_used = 0
+total_idle_machine_costs = 0
+
 global install_schedule
 global tech_schedule
 install_schedule = {}
@@ -78,6 +84,10 @@ def have_common_elements(combination, check_lst):
         if i in check_lst:
             return True
     return False
+
+#orders the technicians in increasing order based on their maximum distance
+tech_incr_dist = sorted(technicians, key=lambda x: technicians[x]['tech_max_distance'])
+
     
        
 #returns the distance of a given route for a given technician
@@ -116,7 +126,7 @@ def creates_schedule():
         init_installations()
         init_distance()
         for combination in schedule_combinations[day]:
-            for tech in range(1, technician_size + 1):
+            for tech in tech_incr_dist:
                 route_distance = is_in_max_dist(combination, tech)
                 if (route_distance <= max_distance[tech] and is_in_capabilities(combination, tech) and not needs_pause(tech) 
                     and max_installations[tech] > 0 and not have_common_elements(combination, done_req)):
@@ -134,7 +144,8 @@ def calculates_installation_costs():
     tech_list = [tech for value in tech_schedule.values() for tech in value.values()]
     maxim_technicians = len(set(tech_list))
     total_distance = sum(is_in_max_dist(key, value) for sublist in tech_schedule.values() for key, value in sublist.items())   
-    total_technicians = sum(len(sublist) for sublist in tech_schedule.values())      
+    total_technicians = sum(len(sublist) for sublist in tech_schedule.values()) 
+     
     total_delay_costs = 0
     delays = {}
     delays = {key: {"delivery_day": day} for key in requests for day in range(1, days + 1) for route in route_schedule[day] if key in route} 
@@ -148,6 +159,12 @@ def calculates_installation_costs():
             delay_days = delays[key]["installation_day"] - delays[key]["delivery_day"] - 1
             delays_cost = machines_set[requests[key]["machine_id"]]["idle_fee"]
             total_delay_costs = total_delay_costs + delays_cost * delay_days
+            
+    total_technician_distance = total_distance
+    sum_of_technician_days = total_technicians
+    total_technicians_used = maxim_technicians
+    total_idle_machine_costs = total_delay_costs
+    
     total_installation_costs = maxim_technicians * technician_cost + total_distance * technician_distance_cost + total_technicians * technician_day_cost + total_delay_costs
     return total_installation_costs
 
@@ -157,6 +174,8 @@ formats_install_schedule()
 init_final_schedule()
 creates_combinations()
 creates_schedule()
+
+
 
 
 #Explanation of the output:
