@@ -7,7 +7,7 @@ Created on Tue Apr 16 09:50:04 2024
 """
 
 from GreedyRouting import *
-from COread2024 import *
+
 from collections import defaultdict
 from itertools import combinations
 
