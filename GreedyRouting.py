@@ -25,21 +25,23 @@ global route_schedule
 d_schedule = {}
 route_schedule = {}
 
-for day in range(1, days + 1):
-    d_schedule[day] = []
-    route_schedule[day] = []
+def init_schedules():
+    for day in range(1, days + 1):
+        d_schedule[day] = []
+        route_schedule[day] = []
 
 
 def calculates_distance(coordinates1, coordinates2):
-    distance = round(np.sqrt(pow(coordinates2[0] -  coordinates1[0],2) + pow(coordinates2[1] -  coordinates1[1],2)))
+    distance = math.ceil(np.sqrt((coordinates2[0]-coordinates1[0])**2 + (coordinates2[1]-coordinates1[1])**2))
     return distance
     
 
 # Assign requests to delivery schedule based on first day 
-for day in range(1, days+1):
-    for i in range(1, requests_size + 1):
-        if requests[i]["first_day"] == day:    
-            d_schedule[day].append(i)
+def assign():
+    for day in range(1, days+1):
+        for i in range(1, requests_size + 1):
+            if requests[i]["first_day"] == day:    
+                d_schedule[day].append(i)
 
 #Get the distance that must be done by a truck in order to deliver a list of request
 #assuming the truck starts at the depot and visits all the requests in the order they are in the list
@@ -141,6 +143,7 @@ def creates_route_schedule():
                 else: 
                     routes_list.append(help_list)
         route_schedule[i] = routes_list
+
     
 
 #makes sure the values of the dictionary d_schedule are all lists of lists 
@@ -149,7 +152,8 @@ def formats_route_schedule():
         if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
             route_schedule[key] = [[]]
         
-        
+init_schedules()
+assign()
 assign_as_late()  
 creates_route_schedule()
 formats_route_schedule()
