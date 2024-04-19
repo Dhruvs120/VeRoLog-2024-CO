@@ -8,6 +8,7 @@ Created on Mon Apr 15 16:22:01 2024
 
 from COread2024 import *
 from collections import defaultdict
+import math
 
 #global variables for writing the output
 global total_truck_distance 
@@ -119,6 +120,17 @@ def assign_as_late():
             d_schedule[i + 1].extend(to_move_req)
         d_schedule[i] = to_keep_req
   
+#check if a truck can go back to the depot after delivering a request and then go to the next request
+def can_go_to_next_node(truck_max_distance, current_node, current_distance, next_node):
+    current_node_location = coordinates_list[requests[current_node]["location_id"]]
+    next_node_location = coordinates_list[requests[next_node]["location_id"]]
+    depot_location = coordinates_list[1]
+    distance_to_next_node = calculates_distance(depot_location, next_node_location)
+    new_distance = current_distance + calculates_distance(current_node_location, depot_location) + distance_to_next_node
+    if new_distance <= truck_max_distance:
+        return True
+    
+    return False
 
 #greedy routing algorithm
 def creates_route_schedule():
@@ -126,24 +138,36 @@ def creates_route_schedule():
     for i in range (1, days + 1):
         routes_list = []
         for j in range(len(d_schedule[i])):
+            # Make a copy of help_list (help_list_depot)
+            help_list_depot = []
             help_list = []
             if d_schedule[i][j] not in check_req:
+                help_list_depot.append(d_schedule[i][j])
                 help_list.append(d_schedule[i][j])
                 check_req.append(d_schedule[i][j])
                 if j != len(d_schedule[i]) - 1:
                     for k in range(j + 1, len(d_schedule[i])):                  
                         if d_schedule[i][k] not in check_req:
+                            help_list_depot.append(d_schedule[i][k])
                             help_list.append(d_schedule[i][k])
-                            if get_distance(help_list) <= truck_max_distance and is_in_maxim_cap(help_list):
+                            if get_distance(help_list) <= truck_max_distance and is_in_maxim_cap(help_list_depot):
                                 check_req.append(d_schedule[i][k])
-                            else: help_list.remove(d_schedule[i][k])
+                            #check if the truck can go back to the depot after delivering the request and then go to the next request
+                            elif (k + 1) < len(d_schedule[i]) - 1 and can_go_to_next_node(truck_max_distance, d_schedule[i][k], get_distance(help_list), d_schedule[i][k + 1]):
+                                check_req.append(d_schedule[i][k])
+                                # help_list.append(1) (problem with the depot, it is not considered as a request)
+                                help_list_depot = []
+                                help_list_depot.append(d_schedule[i][k+1])
+
+                            else:
+                                help_list_depot.remove(d_schedule[i][k]) 
+                                help_list.remove(d_schedule[i][k])
                             
                         if k == len(d_schedule[i]) - 1 and help_list:
                             routes_list.append(help_list)                           
                 else: 
                     routes_list.append(help_list)
         route_schedule[i] = routes_list
-
     
 
 #makes sure the values of the dictionary d_schedule are all lists of lists 
