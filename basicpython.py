@@ -3,6 +3,11 @@ from gurobipy import Model, GRB, quicksum
 
 tools_model = Model("Tools")
 
+file_path = '/Users/stelianmunteanu/Desktop/univer/Combinatorial Optimization/Case/validator/CO_Case2420sol.txt' # Specify the path and filename
+instance_file = "instances 2024/CO_Case2401.txt" # Replace with your actual file path
+
+usable_name = file_path.split('/')[-1].split('.')[0]  # Extract the name of the file without the extension
+
 def start_location(locations,start_location_id):
     for location in locations.values():
         if location.id == start_location_id:
@@ -212,39 +217,63 @@ def Optimize(dataset, machines, locations, requests,technicians ):
     print(number_of_trucks)
     
     total_truck_distance = 0
+    total_trucks_used = 0
+    max_trucks_used = 0
     for day in range(1,dataset.days+1):
         for i in range(0,len(truck_routes)):
+
+            if len(route_each_day[day]) > max_trucks_used:
+                max_trucks_used = len(route_each_day[day])
+
             if route_each_day[day][i].X == 1.0:
                 total_truck_distance = total_truck_distance + truck_routes[i][1]
-    
-    
-    print("Total truck distance:", total_truck_distance)
-    print("Number of trucks days", )
-    print("Number of trucks used:", number_of_trucks.X)
-    print("Total technician distance:", )
-    print("Number of technician days:", )
-    print("Number of technician used:", )
-    print("Idle machine costs:", )
-    print("Total costs:", tools_model.objVal)
-    
-#     file_path = 'solutions/CO_Case2401sol.txt' # Specify the path and filename
-#     file = open(file_path, 'w')
-    
-#     #file.write(f"DATASET = VeRoLog solver challenge 2019\n")
-#     #file.write(f"NAME =", dataset.name, "\n\n")
-#     #file.write(f":TRUCK_DISTANCE =")
-#     #file.write(f"NUMBER_OF_TRUCKS_DAYS = {truck_days}\n")
-#     #file.write(f"NUMBER_OF_TRUCKS_USED = {max_truck}\n")
-#     #file.write(f":TECHNICIAN_DISTANCE {total distance techs}\n")
-#     #file.write(f"NUMBER_OF_TECHNICIAN_DAYS = {tech_days}\n")
-#     #file.write(f"NUMBER_OF_TECHNICIAN_USED = {max_tech}\n")
-#     #file.write(f"IDLE_MACHINE_COSTS = {machines_costs}\n")
-#     #file.write(f"TOTAL_COST = {total_cost}\n")
+                total_trucks_used += 1
 
+    total_technician_distance = 0
+    total_technicians_used = 0
+    technician_per_day = {day : 0 for day in range(1, dataset.days+1)}
 
-# def WriteResults():
-#     file_path = 'solutions/CO_Case2401sol.txt' # Specify the path and filename
-#     with open(file_path, 'w'):
+    for technician in range(0, len(technicians)):
+        for day in range(1, dataset.days+1):
+            for route in range(0, len(technician_routes)):
+                if technician_tour_day[technician][day][route].X == 1.0:
+                    technician_per_day[day] += 1
+                    total_technician_distance += technician_routes[route][1]
+                    total_technicians_used += 1
+    
+
+    with open(file_path, 'w') as results:
+        results.writelines([
+            f"\nDATASET =  {dataset}", 
+            f"NAME = {usable_name}", 
+            f"\nTRUCK_DISTANCE = {round(total_truck_distance)}",   
+            f"\nNUMBER_OF_TRUCK_DAYS = {total_trucks_used}", 
+            f"\nNUMBER_OF_TRUCKS_USED = {max_trucks_used}", 
+            f"\nTECHNICIAN_DISTANCE = {round(total_technician_distance)}", 
+            f"\nNUMBER_OF_TECHNICIAN_DAYS = {total_technicians_used}", 
+            f"\nNUMBER_OF_TECHNICIANS_USED = {max(technician_per_day.values())}", 
+            f"\nIDLE_MACHINE_COSTS = {sum(request_idle_cost.values())}", 
+            f"\nTOTAL_COST = {round(tools_model.objVal)}\n" 
+        ])
+
+# Still need to work this part out, doesn't look too difficult though  
+    #     for i in range(1, days + 1): 
+    #         number_of_trucks = 0
+    #         if route_schedule[i][0]:
+    #             number_of_trucks = len(route_schedule[i])
+                
+    #         results.writelines([
+    #         f"\nDAY = {i}",     
+    #         f"\nNUMBER_OF_TRUCKS = {number_of_trucks}"])
+            
+    #         for truck_id in range(number_of_trucks):
+    #             results.writelines([
+    #                 f"\n {truck_id + 1} {' '.join(map(str, route_schedule[i][truck_id]))}"])
+            
+    #         results.writelines([f"\nNUMBER_OF_TECHNICIANS = {len(tech_schedule[i])}"])
+    #         for route, technician_id in tech_schedule[i].items():
+    #             results.writelines([
+    #                 f"\n {technician_id} {' '.join(map(str, route))}"])
 
 
 
@@ -405,7 +434,6 @@ def ReadInstance(instance_file):
 
 
 if __name__ == "__main__":
-    instance_file = "instances 2024/CO_Case2401.txt" # Replace with your actual file path
     dataset, machines, locations, requests, technicians = ReadInstance(instance_file)
 
     # Sanity check
@@ -429,7 +457,5 @@ if __name__ == "__main__":
         print(technician.__dict__)
     print("begin:")
     Optimize(dataset, machines, locations, requests, technicians)
-    print("Code has no errors")
-  
     # Return a specific technician's attribute based on their id    
     # print(technicians.get(1).machine_capabilities)
