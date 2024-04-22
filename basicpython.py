@@ -226,7 +226,7 @@ def Optimize(dataset, machines, locations, requests,technicians ):
                 max_trucks_used = len(route_each_day[day])
 
             if route_each_day[day][i].X == 1.0:
-                total_truck_distance = total_truck_distance + truck_routes[i][1]
+                total_truck_distance += truck_routes[i][1]
                 total_trucks_used += 1
 
     total_technician_distance = 0
@@ -257,25 +257,19 @@ def Optimize(dataset, machines, locations, requests,technicians ):
         ])
 
 # Still need to work this part out, doesn't look too difficult though  
-    #     for i in range(1, days + 1): 
-    #         number_of_trucks = 0
-    #         if route_schedule[i][0]:
-    #             number_of_trucks = len(route_schedule[i])
-                
-    #         results.writelines([
-    #         f"\nDAY = {i}",     
-    #         f"\nNUMBER_OF_TRUCKS = {number_of_trucks}"])
+        for i in range(1, dataset.days + 1): 
+            results.writelines([f"\nDAY = {i}"
+                                f"\nNUMBER_OF_TRUCKS = {len(route_each_day[i])}"])
             
-    #         for truck_id in range(number_of_trucks):
-    #             results.writelines([
-    #                 f"\n {truck_id + 1} {' '.join(map(str, route_schedule[i][truck_id]))}"])
+            for truck in range(route_each_day[i]):
+                results.write([f"\n{truck} {route_each_day[i][truck].X}"])
             
-    #         results.writelines([f"\nNUMBER_OF_TECHNICIANS = {len(tech_schedule[i])}"])
-    #         for route, technician_id in tech_schedule[i].items():
-    #             results.writelines([
-    #                 f"\n {technician_id} {' '.join(map(str, route))}"])
+            results.write([f"\nNUMBER_OF_TECHNICIANS = {len(technician_tour_day[i])}"])
 
-
+            for technician in range(technician_tour_day):
+                for route in range(len(technician_routes)):
+                    if technician_tour_day[technician][i][route].X == 1.0:
+                        results.write([f"\n{technician} {technician_tour_day[technician][i][route].X}"])
 
 class Dataset:
     def __init__(self, name):
