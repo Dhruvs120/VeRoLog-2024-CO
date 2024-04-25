@@ -21,8 +21,11 @@ def start_location(coordinates_list, start_location_id):
     for location in coordinates_list.values():
         if coordinates_list[1] == start_location_id:
             return location
-    
+
 def distance(coordinates1, coordinates2):
+    if coordinates1 is None or coordinates2 is None:
+        return 0
+    
     distance = math.ceil(np.sqrt(pow(coordinates2[0] -  coordinates1[0],2) + pow(coordinates2[1] -  coordinates1[1],2)))
     return distance
 
@@ -44,14 +47,16 @@ def find_routes(start_location_id, truck_max_distance,coordinates_list):
                 routes.append([route,total_distance])
     return routes
 
+
+
 def possible_schedules():
     
     days = []
-    for i in range(1,days+1):
+    for i in range(1,len(days)+1):
         days.append(i)
     
     schedules = []
-    for r in range(1, days+1):
+    for r in range(1, len(days)+1):
         for perm in itertools.permutations(days,r):
             if all(perm[i] < perm[i+1] for i in range(len(perm)-1)):
                 consecutive_days = False
@@ -93,7 +98,7 @@ def Optimize(machines, coordinates_list, requests,technicians ):
         for day in range(1,days +1):
             technician_tour_day[technician][day] = {}
             for route in range(0,len(technician_routes)):
-                if technician_routes[route][0][0].id == technicians[technician+1]['location_id']:
+                if technician_routes[route][0][0] == technicians[technician+1]['location_id']:
                     technician_tour_day[technician][day][route] = vending_machine_model.addVar(vtype=GRB.BINARY)
                 else:
                     technician_tour_day[technician][day][route] = 0
@@ -126,7 +131,7 @@ def Optimize(machines, coordinates_list, requests,technicians ):
         for request in range(1,len(requests)+1):
             request_is_in_tecnician_route[route][request] = 0
             for i in range(0,len(technician_routes[route][0])):
-                if requests['location_id'] == technician_routes[route][0][i].id:
+                if requests[request]['location_id'] == technician_routes[route][0][i]:
                     request_is_in_tecnician_route[route][request] = 1
 
     #A_rm
@@ -136,7 +141,7 @@ def Optimize(machines, coordinates_list, requests,technicians ):
         for i in range(1,len(requests)+1):
             request_is_in_truck_route[route][i] = 0
             for j in range(0,len(truck_routes[route][0])):
-                if requests['location_id'] == truck_routes[route][0][j].id:
+                if requests[i]['location_id'] == truck_routes[route][0][j]:
                     request_is_in_truck_route[route][i] = 1
             
     #C_r
@@ -160,7 +165,7 @@ def Optimize(machines, coordinates_list, requests,technicians ):
         technician_cost_per_tour[technician] = {}
         for route in range(0,len(technician_routes)):
             technician_cost_per_tour[technician][route] = 0
-            if technician_routes[route][0][0].id == technicians[technician+1]['location_id']:
+            if technician_routes[route][0][0] == technicians[technician+1]['location_id']:
                 technician_cost_per_tour[technician][route] = technician_day_cost + technician_distance_cost*technician_routes[route][1]
                 
     
@@ -174,7 +179,7 @@ def Optimize(machines, coordinates_list, requests,technicians ):
     #C_m
     request_idle_cost = {}
     for request in range(1,len(requests)+1):
-        request_idle_cost[request] = machines.get(requests['machine_id']).idle_penalty
+        request_idle_cost[request] = machines_set.get(requests[request]['machine_id'])['idle_fee']
     
     #trying
     #for route in range(0,len(truck_routes)):
