@@ -6,68 +6,49 @@ Created on Mon Apr 15 16:22:01 2024
 @author: stelianmunteanu
 """
 
-from COread2024 import *
-from collections import defaultdict
-import math
+import COread2024 as read
+import Tools as tl
 
-#global variables for writing the output
-global total_truck_distance 
-global sum_of_truck_days 
-global number_trucks_used
-
-total_truck_distance = 0
-sum_of_truck_days = 0
-number_trucks_used = 0
-
-
-global d_schedule
-global route_schedule
-
-d_schedule = {}
-route_schedule = {}
-
-def init_schedules():
-    for day in range(1, days + 1):
-        d_schedule[day] = []
-        route_schedule[day] = []
-
-
-def calculates_distance(coordinates1, coordinates2):
-    distance = math.ceil(np.sqrt((coordinates2[0]-coordinates1[0])**2 + (coordinates2[1]-coordinates1[1])**2))
-    return distance
+def init_route_schedules():
+    schedule = {}
+    for day in range(1, read.days + 1):
+        schedule[day] = []
+    return schedule
     
 
-# Assign requests to delivery schedule based on first day 
+# Assign requests to be delivered in the first day
 def assign():
-    for day in range(1, days+1):
-        for i in range(1, requests_size + 1):
-            if requests[i]["first_day"] == day:    
-                d_schedule[day].append(i)
+    schedule = init_route_schedules()
+    for day in range(1, read.days+1):
+        for i in range(1, read.requests_size + 1):
+            if read.requests[i]["first_day"] == day:    
+                schedule[day].append(i)
+    return schedule
 
 #Get the distance that must be done by a truck in order to deliver a list of request
 #assuming the truck starts at the depot and visits all the requests in the order they are in the list
 def get_distance(req_list):
-    depot_location = coordinates_list[1]
-    first_customer_location = coordinates_list[requests[req_list[0]]["location_id"]]
-    distance = calculates_distance(depot_location, first_customer_location)
+    depot_location = read.coordinates_list[1]
+    first_customer_location = read.coordinates_list[read.requests[req_list[0]]["location_id"]]
+    distance = tl.calculates_distance(depot_location, first_customer_location)
     for i in range (1, len(req_list)):
-        previous_customer_location = coordinates_list[requests[req_list[i - 1]]["location_id"]]
-        actual_customer_location = coordinates_list[requests[req_list[i]]["location_id"]]
-        distance = distance + calculates_distance(previous_customer_location, actual_customer_location)
-    final_cust = coordinates_list[requests[req_list[-1]]["location_id"]]
-    distance = distance + calculates_distance(final_cust, depot_location)
+        previous_customer_location = read.coordinates_list[read.requests[req_list[i - 1]]["location_id"]]
+        actual_customer_location = read.coordinates_list[read.requests[req_list[i]]["location_id"]]
+        distance = distance + tl.calculates_distance(previous_customer_location, actual_customer_location)
+    final_cust = read.coordinates_list[read.requests[req_list[-1]]["location_id"]]
+    distance = distance + tl.calculates_distance(final_cust, depot_location)
     return distance
 
 #Check if a list of requests concerns machines with in the maximum capacity of a truck
 def is_in_maxim_cap(req_list):
     capacity = 0
     for i in req_list:
-        number_machines = requests[i]["nr_machines"]
-        machine_type = requests[i]["machine_id"]
-        machine_size = machines_size[machine_type]
+        number_machines = read.requests[i]["nr_machines"]
+        machine_type = read.requests[i]["machine_id"]
+        machine_size = read.machines_size[machine_type]
         req_capacity = number_machines * machine_size
         capacity = capacity + req_capacity
-    if capacity <= truck_capacity:
+    if capacity <= read.truck_capacity:
         return True
     else: return False
     
@@ -78,8 +59,8 @@ def latest_due_date(req_list):
     req_result = None
     req_max_date = 0
     for i in req_list:
-        if requests[i]["last_day"] > req_max_date:
-            req_max_date = requests[i]["last_day"]
+        if read.requests[i]["last_day"] > req_max_date:
+            req_max_date = read.requests[i]["last_day"]
             req_result = i
     return req_result
 
@@ -88,13 +69,12 @@ def get_high_cap(req_list):
     result_id = None
     highest_cap = 0
     for i in req_list:
-       number_machines = requests[i]["nr_machines"]
-       machine_type = requests[i]["machine_id"]
-       machine_size = machines_size[machine_type]
+       number_machines = read.requests[i]["nr_machines"]
+       machine_type = read.requests[i]["machine_id"]
+       machine_size = read.machines_size[machine_type]
        req_capacity = number_machines * machine_size
-       capacity = capacity + req_capacity
-       if capacity > highest_cap:
-           highest_cap = capacity
+       if req_capacity > highest_cap:
+           highest_cap = req_capacity
            result_id = i           
     return result_id
 
@@ -105,93 +85,81 @@ def moved_requests(req_list, actual_day):
     to_move_req = []
     to_keep_req = []
     for i in req_list:
-        if actual_day < requests[i]["last_day"] - 1:
+        if actual_day < read.requests[i]["last_day"] - 1:
             to_move_req.append(i)
         else: to_keep_req.append(i)
     return to_move_req, to_keep_req
 
         
 #groups all the requests with respect to the due day (routes the requests as late as possible)
-def assign_as_late():
-    for i in range(1, days + 1):
-        schedule_day = d_schedule[i]
+def assign_as_late(broute_route_schedule):
+    for i in range(1, read.days + 1):
+        schedule_day = broute_route_schedule[i]
         to_move_req, to_keep_req = moved_requests(schedule_day, i)
-        if i != days and to_move_req:
-            d_schedule[i + 1].extend(to_move_req)
-        d_schedule[i] = to_keep_req
-  
-#check if a truck can go back to the depot after delivering a request and then go to the next request
-def can_go_to_next_node(truck_max_distance, current_node, current_distance, next_node):
-    current_node_location = coordinates_list[requests[current_node]["location_id"]]
-    next_node_location = coordinates_list[requests[next_node]["location_id"]]
-    depot_location = coordinates_list[1]
-    distance_to_next_node = calculates_distance(depot_location, next_node_location)
-    new_distance = current_distance + calculates_distance(current_node_location, depot_location) + distance_to_next_node
-    if new_distance <= truck_max_distance:
+        if i != read.days and to_move_req:
+            broute_route_schedule[i + 1].extend(to_move_req)
+        broute_route_schedule[i] = to_keep_req
+    return broute_route_schedule
+        
+#return true if the time constraints allow the request with id: req_id can be delivered in day: day
+def can_be_moved(req_id, day):
+    first_day = read.requests[req_id]["first_day"]
+    last_day = read.requests[req_id]["last_day"]
+    if day >= first_day and day < last_day:
         return True
+    else: return False
     
-    return False
-
+#greedy routing algorithm starting from the brut route
 #greedy routing algorithm
-def creates_route_schedule():
+def creates_route_schedule(brut_route_schedule):
+    #print(brut_route_schedule)
+    route_schedule = init_route_schedules()
     check_req = [] 
-    for i in range (1, days + 1):
+    for i in range (1, read.days + 1):
         routes_list = []
-        for j in range(len(d_schedule[i])):
-            # Make a copy of help_list (help_list_depot)
-            help_list_depot = []
+        for j in range(len(brut_route_schedule[i])):
             help_list = []
-            if d_schedule[i][j] not in check_req:
-                help_list_depot.append(d_schedule[i][j])
-                help_list.append(d_schedule[i][j])
-                check_req.append(d_schedule[i][j])
-                if j != len(d_schedule[i]) - 1:
-                    for k in range(j + 1, len(d_schedule[i])):                  
-                        if d_schedule[i][k] not in check_req:
-                            help_list_depot.append(d_schedule[i][k])
-                            help_list.append(d_schedule[i][k])
-                            if get_distance(help_list) <= truck_max_distance and is_in_maxim_cap(help_list_depot):
-                                check_req.append(d_schedule[i][k])
-                            #check if the truck can go back to the depot after delivering the request and then go to the next request
-                            elif (k + 1) < len(d_schedule[i]) - 1 and can_go_to_next_node(truck_max_distance, d_schedule[i][k], get_distance(help_list), d_schedule[i][k + 1]):
-                                check_req.append(d_schedule[i][k])
-                                # help_list.append(1) (problem with the depot, it is not considered as a request)
-                                help_list_depot = []
-                                help_list_depot.append(d_schedule[i][k+1])
-
-                            else:
-                                help_list_depot.remove(d_schedule[i][k]) 
-                                help_list.remove(d_schedule[i][k])
+            if brut_route_schedule[i][j] not in check_req:
+                help_list.append(brut_route_schedule[i][j])
+                check_req.append(brut_route_schedule[i][j])
+                if j != len(brut_route_schedule[i]) - 1:
+                    for k in range(j + 1, len(brut_route_schedule[i])):                  
+                        if brut_route_schedule[i][k] not in check_req:
+                            help_list.append(brut_route_schedule[i][k])
+                            if get_distance(help_list) <= read.truck_max_distance and is_in_maxim_cap(help_list):
+                                check_req.append(brut_route_schedule[i][k])
+                            else: help_list.remove(brut_route_schedule[i][k])
                             
-                        if k == len(d_schedule[i]) - 1 and help_list:
+                        if k == len(brut_route_schedule[i]) - 1 and help_list:
                             routes_list.append(help_list)                           
                 else: 
                     routes_list.append(help_list)
         route_schedule[i] = routes_list
-    
+    return route_schedule
+
+
 
 #makes sure the values of the dictionary d_schedule are all lists of lists 
-def formats_route_schedule():         
-    for key, value in route_schedule.items():
+def formats_route_schedule(schedule):         
+    for key, value in schedule.items():
         if isinstance(value, list) and not any(isinstance(sublist, list) for sublist in value):
-            route_schedule[key] = [[]]
+            schedule[key] = [[]]
+    return schedule
+            
+            
+def calculates_routing_costs(route, get_all_info):
+    total_distance = sum(get_distance(j) for sublist in route.values() for j in sublist if j)         
+    maxim_trucks = max(len(sublist) for sublist in route.values())   
+    total_trucks = sum(1 for sublist in route.values() for item in sublist if item)             
+    total_routing_costs = read.truck_distance_cost * total_distance + maxim_trucks * read.truck_cost + total_trucks * read.truck_day_cost
+    if get_all_info:
+        return total_distance, total_trucks, maxim_trucks, total_routing_costs 
+    else: return total_routing_costs
+         
         
-init_schedules()
-assign()
-assign_as_late()  
-creates_route_schedule()
-formats_route_schedule()
 
-def calculates_routing_costs():
-    total_distance = sum(get_distance(j) for sublist in route_schedule.values() for j in sublist if j)      
-    
-    maxim_trucks = max(len(sublist) for sublist in route_schedule.values())   
-    total_trucks = sum(1 for sublist in route_schedule.values() for item in sublist if item)             
-    total_routing_costs = truck_distance_cost * total_distance + maxim_trucks * truck_cost + total_trucks * truck_day_cost
-    total_truck_distance =  total_distance
-    number_trucks_used = maxim_trucks
-    sum_of_truck_days = total_trucks
-    return total_routing_costs
+
+
 
 
 
