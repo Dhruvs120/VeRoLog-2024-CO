@@ -2,6 +2,7 @@ import gurobipy as gp
 import itertools
 from gurobipy import GRB, quicksum
 from classes import Dataset, Machine, Location, Request, Technician
+import numpy as np
 
 
 tools_model = gp.Model("Tools")
@@ -12,7 +13,7 @@ def start_location(locations,start_location_id):
             return location
     
 def distance(point1, point2):
-    return ((point1.x - point2.x)**2 + (point1.y - point2.y)**2) ** 0.5
+    return np.sqrt((point1.x - point2.x)**2 + (point1.y - point2.y)**2)
 
 def find_routes(start_location_id, max_distance,locations):
     # Filter locations to include only those with ID not equal to start_location_id
