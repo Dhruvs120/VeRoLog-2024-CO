@@ -20,7 +20,7 @@ def possible_schedules(dataset, requests, machines):
                         break
                 if not consecutive_days:
                     sum_weight = 0
-                    for i in range(len(perm)):
+                    for i in perm:
                         sum_weight += machine_weights[requests[i].machine_id] * requests[i].quantity
                     if sum_weight <= max_capacity:
                         schedules.append(list(perm))

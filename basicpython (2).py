@@ -19,7 +19,7 @@ def Optimize(dataset, machines, locations, requests,technicians):
         routes = find_routes(technician.location_id, 10000000, locations)
         technician_routes.extend(routes)
     
-    schedules = possible_schedules(dataset)
+    schedules = possible_schedules(dataset, requests, machines)
     
     #Xr_d
     route_each_day = {}
