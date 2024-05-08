@@ -1,10 +1,10 @@
 import gurobipy as gp
 import itertools
-from gurobipy import GRB, quicksum
-from classes import Dataset, Machine, Location, Request, Technician
+from gurobipy import  GRB, quicksum
 
 
 tools_model = gp.Model("Tools")
+
 
 def start_location(locations,start_location_id):
     for location in locations.values():
@@ -17,12 +17,12 @@ def distance(point1, point2):
 def find_routes(start_location_id, max_distance,locations):
     # Filter locations to include only those with ID not equal to start_location_id
     destinations = []
-    routes = []
-
     for loc in locations.values():
         if loc.id != start_location_id:
             destinations.append(loc)
+    routes = []
     
+
     # Generate all possible permutations of destinations
     for r in range(1, len(destinations) + 1):
         for perm in itertools.permutations(destinations, r):
@@ -32,16 +32,13 @@ def find_routes(start_location_id, max_distance,locations):
                 routes.append([route,total_distance])
     return routes
 
-def possible_schedules(dataset, requests, machines):
-    days = []
-    schedules = []
-    max_capacity = dataset.truck_capacity
+def possible_schedules(dataset):
     
-    machine_weights = {machine.id: machine.size for machine in machines.values()}
-
+    days = []
     for i in range(1,dataset.days+1):
         days.append(i)
     
+    schedules = []
     for r in range(1, dataset.days+1):
         for perm in itertools.permutations(days,r):
             if all(perm[i] < perm[i+1] for i in range(len(perm)-1)):
@@ -51,14 +48,12 @@ def possible_schedules(dataset, requests, machines):
                         consecutive_days = True
                         break
                 if not consecutive_days:
-                    sum_weight = 0
-                    for i in range(len(perm)):
-                        sum_weight += machine_weights[requests[i].machine_id] * requests[i].quantity
-                    if sum_weight <= max_capacity:
-                        schedules.append(list(perm))
+                    schedules.append(list(perm))
     return schedules
 
 def Optimize(dataset, machines, locations, requests,technicians ):
+    
+    
         
     truck_routes = find_routes('1', dataset.truck_max_distance,locations)
     
@@ -196,24 +191,27 @@ def Optimize(dataset, machines, locations, requests,technicians ):
     #Ever truck used does not exceeds its maximum capacity
     #Every techinician does not exceeds its maximum installations
     
+    
     #Each technician has a schedule he follows
         
     
     
     
     
-    #Trying to solve truck capacity constraints
-
-
-    # Define truck capacity
-    # truck_capacity = 15  # Assuming a capacity of 15 units for each truck
-
-    # # Define the size of each request (assuming it's stored in the requests dictionary)
-    # request_sizes = {request_id: requests[request_id].quantity * machines[requests[request_id].machine_id].size for request_id in range(1, len(requests) + 1)}
+    #Trying to solve truck capacity constraint
+    """
     
-    # for route in range(len(truck_routes)):
-    #     tools_model.addConstr(quicksum(request_sizes[request_id] * request_is_in_truck_route[route][request_id] for request_id in range(1, len(requests) + 1)) <= truck_capacity)
-      
+    # Define truck capacity
+    truck_capacity = 15  # Assuming a capacity of 15 units for each truck
+
+    # Define the size of each request (assuming it's stored in the requests dictionary)
+    request_sizes = {request_id: requests[request_id].quantity * machines[requests[request_id].machine_id].size for request_id in range(1, len(requests) + 1)}
+    
+    for route in range(len(truck_routes)):
+        tools_model.addConstr(quicksum(request_sizes[request_id] * request_is_in_truck_route[route][request_id] for request_id in range(1, len(requests) + 1)) <= truck_capacity)
+    """
+    
+    
     #Original code
     """
     for route in range(len(truck_routes)):
@@ -361,23 +359,68 @@ def Optimize(dataset, machines, locations, requests,technicians ):
     print("Idle machine costs:", idle_machine_costs )
     print("Total costs:", tools_model.objVal)
     
-    file_path = "/Users/Dhruv/Downloads/Vakken/Combinatorial Optimization/solution/CO_Case2401ol.txt" # Specify the path and filename
+    file_path = "/Users/stijnsmoes/Desktop/UNI ass453/Bachelor BA '20:'24/CO 2024/validator/CO_Case2402sol.txt" # Specify the path and filename
     file = open(file_path, 'w')
     
-    file.writelines([
-        f"DATASET = VeRoLog solver challenge 2019\n",
-        f"NAME = {dataset.name}\n",
-        f"TRUCK_DISTANCE = {total_truck_distance}\n",
-        f"NUMBER_OF_TRUCK_DAYS = {number_of_truck_days}\n",
-        f"NUMBER_OF_TRUCKS_USED = {number_of_trucks}\n",
-        f"TECHNICIAN_DISTANCE = {total_technician_distance}\n",
-        f"NUMBER_OF_TECHNICIAN_DAYS = {number_of_technician_days}\n",
-        f"NUMBER_OF_TECHNICIANS_USED = {number_of_technicians_used}\n",
-        f"IDLE_MACHINE_COSTS = {idle_machine_costs}\n",
-        f"TOTAL_COST = {tools_model.objVal}\n"
-    ])
+    file.write(f"DATASET = VeRoLog solver challenge 2019\n")
+    file.write(f"NAME = {dataset.name}")
+    file.write(f"\nTRUCK_DISTANCE = {total_truck_distance}")
+    file.write(f"\nNUMBER_OF_TRUCK_DAYS = {number_of_truck_days}")
+    file.write(f"\nNUMBER_OF_TRUCKS_USED = {number_of_trucks}")
+    file.write(f"\nTECHNICIAN_DISTANCE = {total_technician_distance}")
+    file.write(f"\nNUMBER_OF_TECHNICIAN_DAYS = {number_of_technician_days}")
+    file.write(f"\nNUMBER_OF_TECHNICIANS_USED = {number_of_technicians_used}")
+    file.write(f"\nIDLE_MACHINE_COSTS = {idle_machine_costs}")
+    file.write(f"\nTOTAL_COST = {tools_model.objVal}\n")
      
-    return None # Might be replaceable with a break eventually, leaving it here for now
+    return None
+
+class Dataset:
+    def __init__(self, name):
+        self.name = name
+        self.days = None
+        self.truck_capacity = None
+        self.truck_max_distance = None
+        self.truck_distance_cost = None
+        self.truck_day_cost = None
+        self.truck_cost = None
+        self.technician_distance_cost = None
+        self.technician_day_cost = None
+        self.technician_cost = None
+
+
+class Machine:
+    def __init__(self, id, size, idle_penalty):
+        self.id = id
+        self.size = size
+        self.idle_penalty = idle_penalty
+
+
+class Location:
+    def __init__(self, id, x, y):
+        self.id = id
+        self.x = x
+        self.y = y
+
+
+class Request:
+    def __init__(self, id, location_id, start_day, end_day, machine_id, quantity):
+        self.id = id
+        self.location_id = location_id
+        self.start_day = start_day
+        self.end_day = end_day
+        self.machine_id = machine_id
+        self.quantity = quantity
+
+
+class Technician:
+    def __init__(self, id, location_id, max_distance_per_day, max_installations_per_day, machine_capabilities):
+        self.id = id
+        self.location_id = location_id
+        self.max_distance_per_day = max_distance_per_day
+        self.max_installations_per_day = max_installations_per_day
+        self.machine_capabilities = machine_capabilities
+
 
 def ReadInstance(instance_file):
     dataset = None
@@ -489,7 +532,7 @@ def ReadInstance(instance_file):
 
 
 if __name__ == "__main__":
-    instance_file = "/Users/Dhruv/Downloads/Vakken/Combinatorial Optimization/VeRoLog-2024-CO/instances 2024/CO_Case2401.txt" # Replace with your actual file path
+    instance_file = "/Users/stijnsmoes/Desktop/UNI ass453/Bachelor BA '20:'24/CO 2024/instances 2024/CO_Case2406.txt" # Replace with your actual file path
     dataset, machines, locations, requests, technicians = ReadInstance(instance_file)
 
     # Sanity check
