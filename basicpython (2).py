@@ -21,7 +21,8 @@ def Optimize(dataset, machines, locations, requests,technicians):
     for day in range(1,dataset.days+1):
         route_each_day[day] = {}
         for route in range(0,len(truck_routes)):
-            route_each_day[day][route] = tools_model.addVar(vtype = GRB.BINARY)
+            for path in range(0,len(truck_routes[route][0])):
+                route_each_day[day][route] = tools_model.addVar(vtype = GRB.BINARY)
     
     #N_trucks
     number_of_trucks = tools_model.addVar(vtype=GRB.INTEGER)
@@ -40,7 +41,6 @@ def Optimize(dataset, machines, locations, requests,technicians):
     truck_cost_each_route = {}
     for i in range(0,len(truck_routes)):
         truck_cost_each_route[i] = dataset.truck_day_cost + (truck_routes[i][1]*dataset.truck_distance_cost)
-        
     
     #y_p_t,d
     technician_tour_day = {}
@@ -172,16 +172,7 @@ def Optimize(dataset, machines, locations, requests,technicians):
     for request in range(1, len(requests) + 1):
         tools_model.addConstr(quicksum(requests[request].quantity * request_is_in_truck_route[route][request]for route in range(len(truck_routes))) == 1)
     """
-    
-    
-    
-    
-    for day in range(1,dataset.days+1):
-        tools_model.addConstr(quicksum(route_each_day[day][i] for i in range(0,len(truck_routes))) <= number_of_trucks)
-    
-    for request in range(1,len(requests)+1):
-        tools_model.addConstr(quicksum(request_is_in_truck_route[route][request]*route_each_day[day][route] for route in range(0,len(truck_routes)) for day in range(1,dataset.days+1)) == 1)
-    
+  
     for technician in range(0,len(technicians)):
         tools_model.addConstr(quicksum(technician_schedule[technician][schedule] for schedule in range(0,len(schedules)) ) <= 1)
     
@@ -487,28 +478,28 @@ if __name__ == "__main__":
     instance_file = "/Users/stijnsmoes/Desktop/UNI ass453/Bachelor BA '20:'24/CO 2024/instances 2024/CO_Case2406.txt" # Replace with your actual file path
     dataset, machines, locations, requests, technicians = ReadInstance(instance_file)
 
-    # Sanity check
-    print("Dataset:")
-    print(dataset.__dict__)
+    # # Sanity check
+    # print("Dataset:")
+    # print(dataset.__dict__)
 
-    print("\nMachines:")
-    for machine in machines.values():
-        print(machine.__dict__)
+    # print("\nMachines:")
+    # for machine in machines.values():
+    #     print(machine.__dict__)
 
-    print("\nLocations:")
-    for location in locations.values():
-        print(location.__dict__)
+    # print("\nLocations:")
+    # for location in locations.values():
+    #     print(location.__dict__)
 
-    print("\nRequests:")
-    for request in requests.values():
-        print(request.__dict__)
+    # print("\nRequests:")
+    # for request in requests.values():
+    #     print(request.__dict__)
 
-    print("\nTechnicians:")
-    for technician in technicians.values():
-        print(technician.__dict__)
-    print("begin:")
-    Optimize(dataset, machines, locations, requests, technicians)
-    print("Code has no errors")
+    # print("\nTechnicians:")
+    # for technician in technicians.values():
+    #     print(technician.__dict__)
+    # print("begin:")
+    # Optimize(dataset, machines, locations, requests, technicians)
+    # print("Code has no errors")
   
-    # Return a specific technician's attribute based on their id    
-    # print(technicians.get(1).machine_capabilities)
+    # # Return a specific technician's attribute based on their id    
+    # # print(technicians.get(1).machine_capabilities)
