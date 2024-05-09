@@ -11,6 +11,8 @@ from fileReader import ReadInstance
 tools_model = gp.Model("Tools")
 
 def Optimize(dataset, machines, locations, requests,technicians):
+    # If someone has an idea on how to figure out the actual schedule we use, we can then use it calculate the weight for that day.
+    # If it is above the threshold, we force it to add an extra truck
         
     truck_routes = find_routes('1', dataset.truck_max_distance,locations)
     
