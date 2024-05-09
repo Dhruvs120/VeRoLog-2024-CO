@@ -5,7 +5,61 @@ from gurobipy import  GRB, quicksum
 
 tools_model = gp.Model("Tools")
 
+<<<<<<< HEAD
 def Optimize(dataset, machines, locations, requests,technicians):
+    # If someone has an idea on how to figure out the actual schedule we use, we can then use it calculate the weight for that day.
+    # If it is above the threshold, we force it to add an extra truck
+=======
+
+def start_location(locations,start_location_id):
+    for location in locations.values():
+        if location.id == start_location_id:
+            return location
+    
+def distance(point1, point2):
+    return ((point1.x - point2.x)**2 + (point1.y - point2.y)**2) ** 0.5
+
+def find_routes(start_location_id, max_distance,locations):
+    # Filter locations to include only those with ID not equal to start_location_id
+    destinations = []
+    for loc in locations.values():
+        if loc.id != start_location_id:
+            destinations.append(loc)
+    routes = []
+    
+
+    # Generate all possible permutations of destinations
+    for r in range(1, len(destinations) + 1):
+        for perm in itertools.permutations(destinations, r):
+            route = [start_location(locations, start_location_id)] + list(perm) + [start_location(locations, start_location_id)]
+            total_distance = sum(distance(route[i], route[i+1]) for i in range(0,len(route)-1))
+            if total_distance <= max_distance:
+                routes.append([route,total_distance])
+    return routes
+
+def possible_schedules(dataset):
+    
+    days = []
+    for i in range(1,dataset.days+1):
+        days.append(i)
+    
+    schedules = []
+    for r in range(1, dataset.days+1):
+        for perm in itertools.permutations(days,r):
+            if all(perm[i] < perm[i+1] for i in range(len(perm)-1)):
+                consecutive_days = False
+                for i in range(len(perm)-4):
+                    if perm[i+4] - perm[i] == 4:
+                        consecutive_days = True
+                        break
+                if not consecutive_days:
+                    schedules.append(list(perm))
+    return schedules
+
+def Optimize(dataset, machines, locations, requests,technicians ):
+    
+    
+>>>>>>> eb2fa329d60f5845f85743d7c39b7747b01c9cde
         
     truck_routes = find_routes('1', dataset.truck_max_distance,locations)
     
