@@ -1,6 +1,6 @@
 import gurobipy as gp
 from gurobipy import  GRB, quicksum
-from partFunctions import distance, start_location
+from partFunctions import distance
 from routeFinder import find_routes
 from scheduleGenerator import possible_schedules
 from instanceReader import ReadInstance
