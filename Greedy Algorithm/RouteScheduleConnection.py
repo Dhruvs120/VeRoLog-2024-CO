@@ -7,7 +7,7 @@ Created on Wed Apr 17 09:50:19 2024
 """
 
 
-import COread2024 as read
+import ReadInput as read
 import GreedyRouting as rt
 import GreedySchedule as sch
 import WriteOutput as write
@@ -20,6 +20,7 @@ def creates_firs_route():
     global route_schedule
     brut_route_schedule = rt.init_route_schedules()
     brut_route_schedule = rt.assign()
+    brut_route_schedule = rt.assign_as_late(brut_route_schedule)
     route_schedule = rt.creates_route_schedule(brut_route_schedule)
     route_schedule = rt.formats_route_schedule(route_schedule)
 
@@ -65,14 +66,13 @@ def get_cheapest_day(req_id, brut_route_schedule):
     day = None
     current_day = get_day(req_id, brut_route_schedule)
     for i in range(read.requests[req_id]["first_day"], read.requests[req_id]["last_day"]):
-        if i != current_day:
-            brut_route_schedule[i].append(req_id)
-            route_schedule = rt.creates_route_schedule(brut_route_schedule)
-            costs = rt.calculates_routing_costs(route_schedule, False)
-            if costs < min_costs:
-                day = i
-                min_costs = costs
-                brut_route_schedule[i].remove(req_id)
+        brut_route_schedule[i].append(req_id)
+        route_schedule = rt.creates_route_schedule(brut_route_schedule)
+        costs = rt.calculates_routing_costs(route_schedule, False)
+        if costs < min_costs:
+            day = i
+            min_costs = costs
+            brut_route_schedule[i].remove(req_id)
     return day
 
 #re-assigns the missing requests if they are present
@@ -90,7 +90,7 @@ def finish():
 
             day = get_day(i, brut_route_schedule)
             cheapest_day = get_cheapest_day(i, brut_route_schedule)
-            brut_route_schedule[day].remove(i)
+            #brut_route_schedule[day].remove(i)
             brut_route_schedule[cheapest_day].append(i)
             route_schedule = rt.creates_route_schedule(brut_route_schedule)
             route_schedule = rt.formats_route_schedule(route_schedule)

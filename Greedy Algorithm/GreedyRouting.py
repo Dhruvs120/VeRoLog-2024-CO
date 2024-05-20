@@ -6,7 +6,7 @@ Created on Mon Apr 15 16:22:01 2024
 @author: stelianmunteanu
 """
 
-import COread2024 as read
+import ReadInput as read
 import Tools as tl
 from collections import defaultdict
 from itertools import combinations
@@ -23,7 +23,7 @@ def assign():
     schedule = init_route_schedules()
     for day in range(1, read.days+1):
         for i in range(1, read.requests_size + 1):
-            if read.requests[i]["last_day"] - 1 == day:    
+            if read.requests[i]["first_day"] == day:    
                 schedule[day].append(i)
     return schedule
 
@@ -53,6 +53,55 @@ def is_in_maxim_cap(req_list):
     if capacity <= read.truck_capacity:
         return True
     else: return False
+    
+    
+#From a list of requests returns the id of the request with the latest due date
+#This function is not used yet, it may be useful for further optimization
+def latest_due_date(req_list):
+    req_result = None
+    req_max_date = 0
+    for i in req_list:
+        if read.requests[i]["last_day"] > req_max_date:
+            req_max_date = read.requests[i]["last_day"]
+            req_result = i
+    return req_result
+
+#From a list of requests returns the id of the request which needs the largest capacity
+def get_high_cap(req_list):
+    result_id = None
+    highest_cap = 0
+    for i in req_list:
+       number_machines = read.requests[i]["nr_machines"]
+       machine_type = read.requests[i]["machine_id"]
+       machine_size = read.machines_size[machine_type]
+       req_capacity = number_machines * machine_size
+       if req_capacity > highest_cap:
+           highest_cap = req_capacity
+           result_id = i           
+    return result_id
+
+
+# From a list of request returns a list of requests that can be delivered the next day based on their due date
+#and a second list of requests that can not be delivered  on a later day(thus, must be delivered on the 'actual_day')
+def moved_requests(req_list, actual_day):
+    to_move_req = []
+    to_keep_req = []
+    for i in req_list:
+        if actual_day < read.requests[i]["last_day"] - 1:
+            to_move_req.append(i)
+        else: to_keep_req.append(i)
+    return to_move_req, to_keep_req
+
+        
+#groups all the requests with respect to the due day (routes the requests as late as possible)
+def assign_as_late(broute_route_schedule):
+    for i in range(1, read.days + 1):
+        schedule_day = broute_route_schedule[i]
+        to_move_req, to_keep_req = moved_requests(schedule_day, i)
+        if i != read.days and to_move_req:
+            broute_route_schedule[i + 1].extend(to_move_req)
+        broute_route_schedule[i] = to_keep_req
+    return broute_route_schedule
 
 #returns all possible combinations out of the numbers of a list: numbers
 def generate_all_combinations(numbers):
@@ -68,18 +117,32 @@ def has_common_element(list1, list2):
             return True
     return False
 
-#routing algorithm starting from the brut route
-def creates_route_schedule(brut_route_schedule):
-    route_schedule = defaultdict(list)
-    for day in range (1, read.days + 1):
-        route_schedule[day]
-        check_req = [] 
-        routes_list = generate_all_combinations(brut_route_schedule[day])
-        for route in routes_list:
-            if not has_common_element(check_req, route) and is_in_maxim_cap(route) and get_distance(route) <= read.truck_max_distance:
-                check_req.extend(route)
-                route_schedule[day].append(route)
 
+#greedy routing algorithm starting from the brut route
+#greedy routing algorithm
+def creates_route_schedule(brut_route_schedule):
+    route_schedule = init_route_schedules()
+    check_req = [] 
+    for i in range (1, read.days + 1):
+        routes_list = []
+        for j in range(len(brut_route_schedule[i])):
+            help_list = []
+            if brut_route_schedule[i][j] not in check_req:
+                help_list.append(brut_route_schedule[i][j])
+                check_req.append(brut_route_schedule[i][j])
+                if j != len(brut_route_schedule[i]) - 1:
+                    for k in range(j + 1, len(brut_route_schedule[i])):                  
+                        if brut_route_schedule[i][k] not in check_req:
+                            help_list.append(brut_route_schedule[i][k])
+                            if get_distance(help_list) <= read.truck_max_distance and is_in_maxim_cap(help_list):
+                                check_req.append(brut_route_schedule[i][k])
+                            else: help_list.remove(brut_route_schedule[i][k])
+                            
+                        if k == len(brut_route_schedule[i]) - 1 and help_list:
+                            routes_list.append(help_list)                           
+                else: 
+                    routes_list.append(help_list)
+        route_schedule[i] = routes_list
     return route_schedule
 
 #makes sure the values of the dictionary d_schedule are all lists of lists 

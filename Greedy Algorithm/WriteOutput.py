@@ -5,7 +5,7 @@ Created on Wed Apr 17 16:32:00 2024
 
 @author: stelianmunteanu
 """
-import COread2024 as read
+import ReadInput as read
 
 
 

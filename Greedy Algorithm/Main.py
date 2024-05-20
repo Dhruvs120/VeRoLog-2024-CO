@@ -6,7 +6,7 @@ Created on Thu Apr 18 17:26:42 2024
 @author: stelianmunteanu
 """
 
-import COread2024 as read
+import ReadInput as read
 import RouteScheduleConnection as rsc
 
 

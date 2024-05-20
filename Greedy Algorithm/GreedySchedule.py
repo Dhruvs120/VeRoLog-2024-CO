@@ -7,7 +7,7 @@ Created on Tue Apr 16 09:50:04 2024
 """
 
 from itertools import combinations
-import COread2024 as read
+import ReadInput as read
 import Tools as tl
 
 
