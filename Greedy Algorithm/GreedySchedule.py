@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr 16 09:50:04 2024
+
+@author: stelianmunteanu
+"""
+
+from itertools import combinations
+import COread2024 as read
+import Tools as tl
+
+
+#based on the Greedy routing, creates the general schedule for the technicians
+#that is, moves all the delivered requsts to the next day
+def creates_install_schedule(routing_schedule):
+    schedule = {}
+    for i in range (1, read.days + 1):
+        if i == 1:
+            schedule[i] = []
+        else: 
+            schedule[i] = [num for sublist in routing_schedule[i-1] for num in sublist]
+    return schedule
+
+    
+#init the final technician schedule
+def init_tech_schedule():
+    schedule = {}
+    for i in range (1, read.days + 1):
+        schedule[i] = {}
+    return schedule
+    
+#helps to keep track of the number of installations done each day by a technician
+max_installations = {}
+def init_installations():
+    for  i in range (1, read.technician_size + 1):
+        max_installations[i] = read.technicians[i]['tech_max_install'] 
+
+#helps to keep track of the km done by each technician and initialiazes the max distance for each technician
+max_distance = {}
+def init_distance():
+    for i in range(1, read.technician_size + 1):
+        max_distance[i] = read.technicians[i]["tech_max_distance"]
+
+#helps to keep track of the number of worked days by each technician
+worked_days = {}
+def init_work_days():
+    for  i in range (1, read.technician_size + 1):
+        worked_days[i] = []        
+        
+#checks if a technician needs a day off
+def needs_pause(tech_id):
+    for i in range(len(worked_days[tech_id]) - 4): 
+        if worked_days[tech_id][i] == worked_days[tech_id][i + 1] - 1 == worked_days[tech_id][i + 2] - 2 == worked_days[tech_id][i + 3] - 3 == worked_days[tech_id][i + 4] - 4:
+            return True
+    return False
+
+#checks if for a given technician, a given list of requests is within his technical capabilities
+def is_in_capabilities(req_list, tech_id):   
+    for i in req_list:
+        machine_id = read.requests[i]["machine_id"]
+        if read.technicians[tech_id]["machine_capabilities"][machine_id - 1] == 0:
+            return False
+    return True
+
+#checks if there is at least one common request in a combination and the check list
+def have_common_elements(combination, check_lst):
+    for i in combination:
+        if i in check_lst:
+            return True
+    return False
+       
+#returns the distance of a given route for a given technician
+def get_dist(req_list, tech_id):
+    tech_location = read.coordinates_list[read.technicians[tech_id]['location_id']]
+    first_customer_location = read.coordinates_list[read.requests[req_list[0]]["location_id"]]   
+    distance = tl.calculates_distance(tech_location, first_customer_location)
+    for i in range(1, len(req_list)):
+        previous_customer_location = read.coordinates_list[read.requests[req_list[i - 1]]["location_id"]]
+        actual_customer_location = read.coordinates_list[read.requests[req_list[i]]["location_id"]]
+        distance = distance + tl.calculates_distance(previous_customer_location, actual_customer_location)
+    last_cust_loc = read.coordinates_list[read.requests[req_list[-1]]["location_id"]]   
+    distance = distance + tl.calculates_distance(last_cust_loc, tech_location)
+    return distance
+
+ 
+
+#for each day, creates combinations of the possbile requests that could be installed in one single route
+def creates_combinations(schedule):
+    schedule_combinations = {}
+    for day in range(1, read.days + 1):
+        request = schedule[day]
+        all_combinations = []
+        for r in range(len(request), 0, -1):
+            all_combinations.extend(combinations(request, r))
+        schedule_combinations[day] = all_combinations
+    return schedule_combinations
+    
+#creates a final schedule for the technicians
+def creates_schedule(schedule_combinations, tech_schedule):
+    check_list = []
+    done_req = []
+    init_work_days()
+    for day in range (1, read.days + 1):
+        init_installations()
+        init_distance()
+        for combination in schedule_combinations[day]:
+            tech_incr_dist = sorted(read.technicians, key=lambda x: read.technicians[x]['tech_max_distance'])
+            for tech in tech_incr_dist:
+                route_distance = get_dist(combination, tech)
+                if (route_distance <= max_distance[tech] and is_in_capabilities(combination, tech) and not needs_pause(tech) 
+                    and max_installations[tech] > 0 and not have_common_elements(combination, done_req)):
+                    tech_schedule[day][combination] = tech
+                    done_req.extend(combination)
+                    check_list.extend(combination)
+                    worked_days[tech].append(day)
+                    max_installations[tech] = max_installations[tech] - 1
+                    max_distance[tech] = max_distance[tech] - route_distance
+    return check_list, tech_schedule
+    
+
+
+def calculates_installation_costs(tech_schedule, route_schedule, get_all_info):
+    tech_list = []
+    tech_list = [tech for value in tech_schedule.values() for tech in value.values()]
+    maxim_technicians = len(set(tech_list))
+    total_distance = sum(get_dist(key, value) for sublist in tech_schedule.values() for key, value in sublist.items())   
+    total_technicians = sum(len(sublist) for sublist in tech_schedule.values()) 
+     
+    total_delay_costs = 0
+    delays = {}
+    delays = {key: {"delivery_day": day} for key in read.requests for day in range(1, read.days + 1) for route in route_schedule[day] if key in route} 
+    for key in read.requests:
+        for day in range(1, read.days + 1):
+            for installation in tech_schedule[day]:
+                if key in installation:
+                    delays[key]["installation_day"] = day
+    for key in delays:
+        if key != 9:
+            delay_days = delays[key]["installation_day"] - delays[key]["delivery_day"] - 1
+            delays_cost = read.machines_set[read.requests[key]["machine_id"]]["idle_fee"]
+            total_delay_costs = total_delay_costs + delays_cost * delay_days
+    
+    total_installation_costs = maxim_technicians * read.technician_cost + total_distance * read.technician_distance_cost + total_technicians * read.technician_day_cost + total_delay_costs
+    if get_all_info:
+        return total_distance, total_technicians, maxim_technicians, total_delay_costs, total_installation_costs
+    else: return total_installation_costs
+
+
+
+
+#Explanation of the output:
+# the dictionary tech_schedule has days as keys and installation schedules as values
+# for each dictionary within a day, a tuple of requests represents its key and the id of the techinician 
+#that must install those requests is the value:
+#{1: {}, 2: {(2, 8): 1}, 3: {(6, 10): 2, (7,): 1}, 4: {(1, 3): 2, (4, 5): 1}, 5: {}}
+#in the example above in the third day, the second technician is scheduled for requests 6 and 10
+#and the first technician is scheduled for the request 7
+
+
+        
+    
+
+    
+
+
+      
+    
+    
+    
+    
+
+
+
+    

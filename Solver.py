@@ -5,9 +5,9 @@ from routeFinder import find_routes
 from scheduleGenerator import possible_schedules
 from instanceReader import ReadInstance
 
-instance_file = "instances 2024/CO_Case2401.txt" # Replace with your actual file path
-solution_file_path = 'instances 2024/CO_Case2401sol.txt' # Specify the path and filename
-timelim = 600 # Specify the time limit in seconds
+instance_file = "instances 2024/CO_Case2413.txt" # Replace with your actual file path
+solution_file_path = 'instances 2024/CO_Case2413sol.txt' # Specify the path and filename
+timelim = 1000 # Specify the time limit in seconds
 
 tools_model = gp.Model("Tools")
 
@@ -44,11 +44,13 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
     print("3")
     #Number of trucks used
     
-    if len(requests) > 20 & len(locations) > 5:
-        number_of_trucks = 5
-    else:
+    if len(locations) > 7:
         number_of_trucks = 3
+    else:
+        number_of_trucks = 2
     
+    print(number_of_trucks)
+
     routes_for_each_truck = {}
     for day in range(1,dataset.days+1):
         routes_for_each_truck[day] = {}
