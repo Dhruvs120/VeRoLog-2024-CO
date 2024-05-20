@@ -49,8 +49,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
     else:
         number_of_trucks = 3
     
-    
-    
     routes_for_each_truck = {}
     for day in range(1,dataset.days+1):
         routes_for_each_truck[day] = {}
@@ -194,17 +192,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
         #technicians
         tools_model.addConstr(quicksum(routes_for_each_technician[technician][day][route][request]*route_each_technician_each_day[technician][day][route] for technician in range(1,len(technicians)+1) for route in range(0,len(technician_routes)) for day in range(1,dataset.days+1)) == 1)
         tools_model.addConstr(quicksum(routes_for_each_technician[technician][day][route][request] for technician in range(1,len(technicians)+1) for route in range(0,len(technician_routes)) for day in range(1,dataset.days+1)) == 1)
-    
-
-
-
-
-
-
-
-
-
-
 
     #No more than max installation can be installed on a day.
     for day in range(1, dataset.days+1):
@@ -230,17 +217,9 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
     for technician in range(1,len(technicians)+1):
         for day in range(1,dataset.days+1):
             tools_model.addConstr(quicksum( distance_each_technician_route[route]*route_each_technician_each_day[technician][day][route]for route in range(0,len(technician_routes)))<= technicians[technician].max_distance_per_day)
-            
-    
-
-
-
-
 
     #Idle costs + truck costs 
-    #tools_model.setObjective((dataset.technician_cost * quicksum(technician_schedule[technician][schedule] for technician in range (1,len(technicians)+1) for schedule in range(0,len(schedules)))),GRB.MINIMIZE)
     tools_model.setObjective((quicksum(truck_cost_each_route[route]*route__each_truck_each_day[day][truck][route] for day in range(1,dataset.days+1) for truck in range(0,number_of_trucks) for route in range(0, len(truck_routes))))+(number_of_trucks*dataset.truck_cost) + (quicksum(route_each_technician_each_day[technician][day][route]*technician_cost_each_route[route]for technician in range(1,len(technicians)+1) for day in range(1,dataset.days+1) for route in range(0,len(technician_routes)))) + (quicksum(quantity_each_request[request]*idle_days_request[request]*request_idle_cost[request] for request in range(1,len(requests)+1) )) + (dataset.technician_cost * quicksum(technician_schedule[technician][schedule] for technician in range (1,len(technicians)+1) for schedule in range(0,len(schedules)))),GRB.MINIMIZE)
-    #tools_model.setObjective((quicksum(truck_cost_each_route[route]* quicksum(route__each_truck_each_day[day][truck][route] for day in range(1,dataset.days+1) for truck in range(0,number_of_trucks) ) for route in range(0, len(truck_routes))))+(number_of_trucks*dataset.truck_cost) + (quicksum(quantity_each_request[request]*idle_days_request[request]*request_idle_cost[request] for request in range(1,len(requests)+1) ) + (quicksum(route_each_technician_each_day[technician][day][route]*technician_cost_each_route[technician][route]for technician in range(1,len(technicians)+1) for day in range(1,dataset.days+1) for route in range(0,len(technician_routes)))))+ (dataset.technician_cost * quicksum(technician_schedule[technician][schedule] for technician in range (1,len(technicians)+1) for schedule in range(0,len(schedules)))), GRB.MINIMIZE)
 
     tools_model.setParam("timeLimit", time_limit)
     tools_model.optimize()
@@ -249,9 +228,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
     for technician in range(1,len(technicians)+1):       
         for schedule in range(0,len(schedules)):
             technician_schedule[technician][schedule] = technician_schedule[technician][schedule].X
-
-    
-    
     
     for day in range(1,dataset.days+1):
         for truck in range(0,number_of_trucks):
@@ -261,7 +237,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
                     print(day,truck,route, "hey")
     print("\n")
     
-   
     for day in range(1,dataset.days+1):
         for truck in range(0,number_of_trucks):
             for route in range(0, len(truck_routes)):
@@ -312,20 +287,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
                         print("Technician:", technician)
                         print("Route:", route)
                         print("\n")
-    
-    """
-    print("\n")
-    for route in range(0,len(truck_routes)):
-        print(route,truck_routes[route][1])
-    for i in range(0,len(truck_routes[route][0])):
-        print(truck_routes[route][0][i].id)
-    
-    print("\n")
-    for route in range(0,len(technician_routes)):
-        print(route,technician_routes[route][1])
-    for i in range(0,len(technician_routes[0][0])):
-        print(technician_routes[0][0][i].id)
-    """
   
     number_of_truck_days = 0
     for day in range(1,dataset.days+1):
@@ -366,7 +327,6 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
                     current_location = locations_used[j]
                 if len(locations_used) >=1:  
                     total_truck_distance = total_truck_distance + distance(locations[current_location], locations[end_location])
-    
     
     print("technicians:")
     total_technician_distance = 0
@@ -501,28 +461,7 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
                                 if routes_for_each_truck[day][truck][route][request] == 1:
                                     if requests[request].location_id == truck_routes[route][0][i].id:
                                         file.write(f"{request} ")
-        """
-        for truck in range(0,number_of_trucks):
-            truck_has_already_been_used = False
-            truck_number = truck
-            for route in range(0,len(truck_routes)):
-                route_is_used = False
-                for request in range(1, len(requests)+1):
-                    if routes_for_each_truck[day][truck][route][request] == 1:
-                        route_is_used = True
-                if route_is_used:
-                    if truck_has_already_been_used:
-                        file.write(f"0 ")
-                    if truck_number == current_number:
-                        file.write(f"\n{truck+1} ")
-                        current_number = current_number+1
-                    for i in range(0,len(truck_routes[route][0])):
-                        for request in range(1, len(requests)+1):
-                            if routes_for_each_truck[day][truck][route][request] == 1:
-                                if requests[request].location_id == truck_routes[route][0][i].id:
-                                    truck_has_already_been_used = True
-                                    file.write(f"{request} ")
-        """
+    
         file.write(f"\nNUMBER_OF_TECHNICIANS = {number_of_technicians}")
         
         for technician in range(1,len(technicians)+1):
@@ -541,10 +480,7 @@ def Optimize(dataset, machines, locations, requests,technicians, sol_path, time_
                                         file.write(f"{request} ")
         file.write("\n\n")
     
-    
-            
-    
-    return None
+    return
 
 if __name__ == "__main__":
     dataset, machines, locations, requests, technicians = ReadInstance(instance_file)
