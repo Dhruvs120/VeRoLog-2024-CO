@@ -7,7 +7,7 @@ from instanceReader import ReadInstance
 
 instance_file = "instances 2024/CO_Case2413.txt" # Replace with your actual file path
 solution_file_path = 'instances 2024/CO_Case2413sol.txt' # Specify the path and filename
-timelim = 1000 # Specify the time limit in seconds
+timelim = 600 # Specify the time limit in seconds
 
 tools_model = gp.Model("Tools")
 
